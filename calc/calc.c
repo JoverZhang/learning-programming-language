@@ -1,9 +1,9 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "token.h"
+#include "types.h"
 
 typedef enum {
   INIT_STATUS,
@@ -26,7 +26,7 @@ void get_token(Token *token) {
     if (status == IN_INT_PART_STATUS &&
         !isdigit(cur_char)) {
       token->kind = NUMBER_TOKEN;
-      sscanf(token->str, "%d", &token->value);
+      sscanf(token->str, "%lf", &token->value);
       return;
     }
 
@@ -50,6 +50,12 @@ void get_token(Token *token) {
     } else if (cur_char == '-') {
       token->kind = SUB_OPERATION_TOKEN;
       return;
+    } else if (cur_char == '*') {
+      token->kind = MUL_OPERATION_TOKEN;
+      return;
+    } else if (cur_char == '/') {
+      token->kind = DIV_OPERATION_TOKEN;
+      return;
     }
 
     if (isdigit(cur_char)) {
@@ -58,6 +64,7 @@ void get_token(Token *token) {
     // bad token
     else {
       fprintf(stderr, "bad character(%c)\n", cur_char);
+      exit(1);
     }
   }
 }
@@ -86,7 +93,7 @@ static void unget_token(Token *token) {
   st_look_ahead_token_exists = 1;
 }
 
-static int parse_primary_expression(void) {
+static f64 parse_primary_expression(void) {
   Token token;
 
   m_get_token(&token);
@@ -99,11 +106,30 @@ static int parse_primary_expression(void) {
   return 0;
 }
 
-static int parse_expression(void) {
-  int v1, v2;
+static f64 parse_term(void) {
   Token token;
 
-  v1 = parse_primary_expression();
+  f64 v = parse_primary_expression();
+  for (;;) {
+    m_get_token(&token);
+
+    if (token.kind == MUL_OPERATION_TOKEN) {
+      v *= parse_primary_expression();
+    } else if (token.kind == DIV_OPERATION_TOKEN) {
+      v /= parse_primary_expression();
+    } else {
+      unget_token(&token);
+      break;
+    }
+  }
+  return v;
+}
+
+static f64 parse_expression(void) {
+  f64 v1, v2;
+  Token token;
+
+  v1 = parse_term();
   for (;;) {
     m_get_token(&token);
     if (token.kind != ADD_OPERATION_TOKEN &&
@@ -112,7 +138,7 @@ static int parse_expression(void) {
       break;
     }
 
-    v2 = parse_primary_expression();
+    v2 = parse_term();
     if (token.kind == ADD_OPERATION_TOKEN) {
       v1 += v2;
     } else if (token.kind == SUB_OPERATION_TOKEN) {
@@ -123,18 +149,16 @@ static int parse_expression(void) {
   return v1;
 }
 
-static int parse_line(void) {
+static f64 parse_line(void) {
   st_look_ahead_token_exists = 0;
   return parse_expression();
 }
 
 int main(int argc, char **argv) {
-  int value;
+  set_line("1 + 2 - 3 + 4 * 4\n");
 
-  set_line("1 + 2 - 3 + 4\n");
-
-  value = parse_line();
-  printf("%d", value);
+  f64 value = parse_line();
+  printf("%f", value);
 
   return 0;
 }
