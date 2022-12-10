@@ -56,6 +56,12 @@ void get_token(Token *token) {
     } else if (cur_char == '/') {
       token->kind = DIV_OPERATION_TOKEN;
       return;
+    } else if (cur_char == '(') {
+      token->kind = LEFT_PARENT_TOKEN;
+      return;
+    } else if (cur_char == ')') {
+      token->kind = RIGHT_PARENT_TOKEN;
+      return;
     }
 
     if (isdigit(cur_char)) {
@@ -93,12 +99,22 @@ static void unget_token(Token *token) {
   st_look_ahead_token_exists = 1;
 }
 
+static f64 parse_expression(void);
+
 static f64 parse_primary_expression(void) {
   Token token;
 
   m_get_token(&token);
   if (token.kind == NUMBER_TOKEN) {
     return token.value;
+  } else if (token.kind == LEFT_PARENT_TOKEN) {
+    f64 value = parse_expression();
+    m_get_token(&token);
+    if (token.kind != RIGHT_PARENT_TOKEN) {
+      fprintf(stderr, "missing ')' error.\n");
+      exit(1);
+    }
+    return value;
   }
 
   fprintf(stderr, "syntax error.\n");
@@ -155,7 +171,7 @@ static f64 parse_line(void) {
 }
 
 int main(int argc, char **argv) {
-  set_line("1 + 2 - 3 + 4 * 4\n");
+  set_line("1 + (3 - 2)\n");
 
   f64 value = parse_line();
   printf("%f", value);
