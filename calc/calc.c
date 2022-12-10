@@ -103,23 +103,38 @@ static f64 parse_expression(void);
 
 static f64 parse_primary_expression(void) {
   Token token;
+  f64 value = 0;
+  int minus_flag = 0;
 
+  // handle negative
   m_get_token(&token);
+  if (token.kind == SUB_OPERATION_TOKEN) {
+    minus_flag = 1;
+    m_get_token(&token);
+  }
+
   if (token.kind == NUMBER_TOKEN) {
-    return token.value;
-  } else if (token.kind == LEFT_PARENT_TOKEN) {
-    f64 value = parse_expression();
+    value = token.value;
+  }
+  // handle parent
+  else if (token.kind == LEFT_PARENT_TOKEN) {
+    value = parse_expression();
     m_get_token(&token);
     if (token.kind != RIGHT_PARENT_TOKEN) {
       fprintf(stderr, "missing ')' error.\n");
       exit(1);
     }
-    return value;
+  }
+  // error
+  else {
+    fprintf(stderr, "syntax error.\n");
+    exit(1);
   }
 
-  fprintf(stderr, "syntax error.\n");
-  exit(1);
-  return 0;
+  if (minus_flag) {
+    value = -value;
+  }
+  return value;
 }
 
 static f64 parse_term(void) {
@@ -171,7 +186,7 @@ static f64 parse_line(void) {
 }
 
 int main(int argc, char **argv) {
-  set_line("1 + (3 - 2)\n");
+  set_line("-(3 - 2)\n");
 
   f64 value = parse_line();
   printf("%f", value);
