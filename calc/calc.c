@@ -186,7 +186,7 @@ static f64 parse_line(void) {
 }
 
 int main(int argc, char **argv) {
-  set_line("-(3 - 2)\n");
+  set_line("-(3 - 2) * 3\n");
 
   f64 value = parse_line();
   printf("%f", value);
