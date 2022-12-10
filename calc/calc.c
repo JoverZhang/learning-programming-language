@@ -131,7 +131,7 @@ static int parse_line(void) {
 int main(int argc, char **argv) {
   int value;
 
-  set_line("1 + 2 - 3\n");
+  set_line("1 + 2 - 3 + 4\n");
 
   value = parse_line();
   printf("%d", value);
