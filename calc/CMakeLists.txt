@@ -1,1 +1,1 @@
-add_executable (calc calc.c)
+add_executable (calc calc.c token.h)

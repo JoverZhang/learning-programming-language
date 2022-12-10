@@ -1,3 +1,6 @@
+#ifndef _CALC_TOKEN_H_
+#define _CALC_TOKEN_H_
+
 #include <stdio.h>
 
 typedef enum {
@@ -13,3 +16,5 @@ typedef struct {
   int value;
   char str[100];
 } Token;
+
+#endif
